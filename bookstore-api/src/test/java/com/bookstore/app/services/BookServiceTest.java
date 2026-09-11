@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bookstore.app.dto.BookDto;
 import com.bookstore.app.entity.Book;
+import com.bookstore.app.exception.BadRequestException;
+import com.bookstore.app.exception.ResourceNotFoundException;
 import com.bookstore.app.repository.BookRepository;
 import com.bookstore.app.service.BookService;
 
@@ -52,10 +55,19 @@ public class BookServiceTest {
     }
 
     @Test
-    void testGetBookById_throwsException_whenNotFound() {
+    void testGetBookById_throwsBadRequestException_whenNotFound() {
         when(bookRepository.findById(1201L)).thenReturn(java.util.Optional.empty());
         assertThatThrownBy(() -> bookService.getBookById(1201L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Book not found with id: 1201");
+    }
+
+    @Test 
+    void testFindEntityById_throwResourceNotFoundException_whenNotFound() {
+        when(bookRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookService.findEntityById(99L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Book not found with id: 99");
     }
 }

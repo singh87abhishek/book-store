@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bookstore.app.dto.CartDto;
 import com.bookstore.app.entity.Book;
+import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.service.BookService;
 import com.bookstore.app.service.CartService;
 
@@ -50,7 +51,7 @@ public class CartServiceTest {
         when(bookService.findEntityById(1L)).thenReturn(book);
         
         assertThatThrownBy(() -> cartService.addBookToCart("testuser", 1L, 6))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Not enough stock");
         
     }
@@ -75,5 +76,23 @@ public class CartServiceTest {
     void testGetCart_returnsEmptyCart() {
         CartDto cart = cartService.getCart("testuser");
         assertThat(cart.getItems()).isEmpty();
+    }
+
+    @Test 
+    void testUpdateQuantity_throwsBadRequestException_whenExceedsStock() {
+        when(bookService.findEntityById(1L)).thenReturn(book);
+        assertThatThrownBy(() -> cartService.updateBookQuantity("user1", 1L, 20))
+                        .isInstanceOf(BadRequestException.class)
+                        .hasMessageContaining("Not enough stock for book: Test Book");
+    }
+
+    @Test 
+    void carts_areIsolated_betweenDiffUsers() {
+        when(bookService.findEntityById(1L)).thenReturn(book);
+        cartService.addBookToCart("user1", 1L, 1);
+
+        CartDto user2Cart = cartService.getCart("user2");
+
+        assertThat(user2Cart.getItems()).isEmpty();
     }
 }

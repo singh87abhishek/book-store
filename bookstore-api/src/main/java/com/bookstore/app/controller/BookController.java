@@ -12,7 +12,9 @@ import com.bookstore.app.dto.BookDto;
 import com.bookstore.app.service.BookService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j 
 @RestController 
 @RequestMapping("/bookstore-api/books")
 @RequiredArgsConstructor 
@@ -21,15 +23,17 @@ public class BookController {
 
     @GetMapping 
     public ResponseEntity<List<BookDto>> getAllBooks() {
+        log.debug("Getting request to fetch all available books");
         List<BookDto> bookList = bookService.getAllAvailableBooks();
-        System.out.println("Book List: " + bookList);
+        log.debug("Fetched books: {}", bookList);
         return ResponseEntity.ok(bookList);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BookDto> getBookById(@PathVariable Long id) {
+        log.debug("Getting request to fetch book with ID: {}", id);
         BookDto book = bookService.getBookById(id);
-        System.out.println("Book detail: " + book);
+        log.debug("Fetched book: {}", book);
         return ResponseEntity.ok(book);
     }
 

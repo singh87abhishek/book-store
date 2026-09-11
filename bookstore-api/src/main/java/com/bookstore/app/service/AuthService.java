@@ -1,17 +1,19 @@
 package com.bookstore.app.service;
 
 import java.util.Set;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.bookstore.app.dto.AuthRequest;
 import com.bookstore.app.dto.AuthResponse;
 import com.bookstore.app.dto.RegistrationRequest;
 import com.bookstore.app.entity.User;
+import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * AuthService
- */
+@Slf4j 
 @Service 
 @RequiredArgsConstructor 
 public class AuthService {
@@ -20,16 +22,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public AuthResponse registerUser(RegistrationRequest request) {
+        log.debug("Registering user: {}", request.getUsername());
         if (request.getUsername() == null || request.getUsername().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be null or empty");
+            log.error("Registration Failed : Username cannot be null or empty");
+            throw new BadRequestException("Username cannot be null or empty");
         }
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            log.error("Registration Failed : Username already exists: {}", request.getUsername());
+            throw new BadRequestException("Username already exists");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            log.error("Registration Failed : Email already exists: {}", request.getEmail());
+            throw new BadRequestException("Email already exists");
         }
 
         User user = new User();
@@ -38,17 +44,24 @@ public class AuthService {
         user.setRoles(Set.of("ROLE_USER")); // Set a default role
         userRepository.save(user);
 
+        log.debug("User registered successfully: {}", user.getUsername());
         return new AuthResponse(user.getUsername());
     }
 
-    public AuthResponse login(RegistrationRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+    public AuthResponse login(AuthRequest request) {
+        log.debug("Login attempt for user: {}", request.getUserName());
+        User user = userRepository.findByUsername(request.getUserName())
+                .orElseThrow(() -> { 
+                    log.error("Login Failed : User not found: {}", request.getUserName());
+                    return new BadRequestException("Invalid username or password"); 
+                });
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid username or password");
+            log.error("Login Failed : Invalid password for user: {}", request.getUserName());
+            throw new BadRequestException("Invalid username or password");
         }
 
+        log.debug("User logged in successfully: {}", user.getUsername());
         return new AuthResponse(user.getUsername());
     }
 
