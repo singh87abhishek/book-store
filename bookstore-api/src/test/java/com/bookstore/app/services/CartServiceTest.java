@@ -15,13 +15,13 @@ import com.bookstore.app.dto.CartDto;
 import com.bookstore.app.entity.Book;
 import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.service.BookService;
-import com.bookstore.app.service.CartService;
+import com.bookstore.app.service.impl.CartServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class CartServiceTest {
 
     @InjectMocks 
-    private CartService cartService;
+    private CartServiceImpl cartService;
 
     @Mock 
     private BookService bookService;

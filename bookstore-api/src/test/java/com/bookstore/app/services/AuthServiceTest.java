@@ -19,7 +19,7 @@ import com.bookstore.app.dto.RegistrationRequest;
 import com.bookstore.app.entity.User;
 import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.repository.UserRepository;
-import com.bookstore.app.service.AuthService;
+import com.bookstore.app.service.impl.AuthServiceImpl;
 
 
 
@@ -30,7 +30,7 @@ public class AuthServiceTest {
     @Mock  PasswordEncoder passwordEncoder;
 
     @InjectMocks 
-    private AuthService authService;
+    private AuthServiceImpl authService;
 
     @Test 
     public void testRegisterUser_Success() {

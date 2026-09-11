@@ -28,7 +28,7 @@ import com.bookstore.app.repository.OrderRepository;
 import com.bookstore.app.repository.UserRepository;
 import com.bookstore.app.service.BookService;
 import com.bookstore.app.service.CartService;
-import com.bookstore.app.service.OrderService;
+import com.bookstore.app.service.impl.OrderServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceTest {
@@ -46,7 +46,7 @@ public class OrderServiceTest {
     private BookService bookService;
 
     @InjectMocks
-    private OrderService orderService;
+    private OrderServiceImpl orderService;
 
     private User user;
     private Book book;

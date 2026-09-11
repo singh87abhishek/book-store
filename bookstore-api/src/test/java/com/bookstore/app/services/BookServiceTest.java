@@ -18,7 +18,7 @@ import com.bookstore.app.dto.BookDto;
 import com.bookstore.app.entity.Book;
 import com.bookstore.app.exception.ResourceNotFoundException;
 import com.bookstore.app.repository.BookRepository;
-import com.bookstore.app.service.BookService;
+import com.bookstore.app.service.impl.BookServiceImpl;
 
 @ExtendWith (MockitoExtension.class)
 public class BookServiceTest {
@@ -27,7 +27,7 @@ public class BookServiceTest {
     private BookRepository bookRepository;
 
     @InjectMocks 
-    private BookService bookService;
+    private BookServiceImpl bookService;
 
     private Book book;
 
