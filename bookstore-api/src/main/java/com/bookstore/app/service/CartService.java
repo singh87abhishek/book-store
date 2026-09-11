@@ -79,6 +79,15 @@ public class CartService {
         return buildCartDto(cart != null ? cart : new ConcurrentHashMap<>());
     }
 
+    public Map<Long, Integer> getCartItems(String userName) {
+        return userCarts.getOrDefault(userName, new ConcurrentHashMap<>());
+    }
+
+    public void clearCart(String userName) {
+        log.debug("Clearing cart for User: {}", userName);
+        userCarts.remove(userName);
+    }
+
     //Build a CartDto from the cart items
     private CartDto buildCartDto(Map<Long, Integer> cartItems) {
         CartDto cartDto = new CartDto();

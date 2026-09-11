@@ -1,7 +1,6 @@
 package com.bookstore.app.exception;
 
 import java.time.LocalDateTime;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;

@@ -40,6 +40,7 @@ public class AuthService {
 
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRoles(Set.of("ROLE_USER")); // Set a default role
         userRepository.save(user);

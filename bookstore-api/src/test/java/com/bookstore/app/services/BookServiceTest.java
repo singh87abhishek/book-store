@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bookstore.app.dto.BookDto;
 import com.bookstore.app.entity.Book;
-import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.exception.ResourceNotFoundException;
 import com.bookstore.app.repository.BookRepository;
 import com.bookstore.app.service.BookService;

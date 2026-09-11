@@ -65,4 +65,9 @@ public class BookService {
                 });
     }
 
+    public void save(Book book) {
+        log.debug("Saving book: {}, updated stock: {}", book.getTitle(), book.getStock());
+        bookRepository.save(book);
+    }
+
 }
