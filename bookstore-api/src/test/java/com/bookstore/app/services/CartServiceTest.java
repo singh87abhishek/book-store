@@ -1,0 +1,79 @@
+package com.bookstore.app.services;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.bookstore.app.dto.CartDto;
+import com.bookstore.app.entity.Book;
+import com.bookstore.app.service.BookService;
+import com.bookstore.app.service.CartService;
+
+@ExtendWith(MockitoExtension.class)
+public class CartServiceTest {
+
+    @InjectMocks 
+    private CartService cartService;
+
+    @Mock 
+    private BookService bookService;
+
+    private Book book;
+
+    @BeforeEach 
+    public void setUp() {
+        book = new Book(1L, "Test Book", "Test Author", 10.0, 5, "Test Description", "test_image_url.png");
+    }
+
+    @Test
+    void testAddBookToCart() {
+        // Implement test for adding a book to the cart
+        when(bookService.findEntityById(1L)).thenReturn(book);
+        CartDto cartDto = cartService.addBookToCart("testuser", 1L, 2);
+
+        assertThat(cartDto.getItems()).hasSize(1);
+        assertThat(cartDto.getItems().get(0).getQuantity()).isEqualTo(2);
+        assertThat(cartDto.getItems().get(0).getTitle()).isEqualTo("Test Book");
+        assertThat(cartDto.getTotalPrice()).isEqualTo(20.0);
+
+    }
+
+    @Test
+    void testAddBook_throwsException_whenExceedsStock() {
+        when(bookService.findEntityById(1L)).thenReturn(book);
+        
+        assertThatThrownBy(() -> cartService.addBookToCart("testuser", 1L, 6))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Not enough stock");
+        
+    }
+
+    @Test 
+    void testUpdateBookQuantityInCart() {
+        when(bookService.findEntityById(1L)).thenReturn(book);
+        cartService.addBookToCart("testuser", 1L, 2);
+        CartDto cart = cartService.updateBookQuantity("testuser", 1L, 3);
+        assertThat(cart.getItems().get(0).getQuantity()).isEqualTo(3);
+    }
+
+    @Test 
+    void testRemoveBookFromCart() {
+        when(bookService.findEntityById(1L)).thenReturn(book);
+        cartService.addBookToCart("testuser", 1L, 2);
+        CartDto cart = cartService.removeBookFromCart("testuser", 1L);
+        assertThat(cart.getItems()).isEmpty();
+    }
+
+    @Test 
+    void testGetCart_returnsEmptyCart() {
+        CartDto cart = cartService.getCart("testuser");
+        assertThat(cart.getItems()).isEmpty();
+    }
+}
