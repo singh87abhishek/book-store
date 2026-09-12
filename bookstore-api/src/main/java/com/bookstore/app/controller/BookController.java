@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.app.dto.BookDto;
 import com.bookstore.app.service.BookService;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +40,27 @@ public class BookController {
         BookDto book = bookService.getBookById(id);
         log.debug("Fetched book: {}", book);
         return ResponseEntity.ok(book);
+    }
+
+    @PostMapping
+    public ResponseEntity<BookDto> createBook(@RequestBody BookDto book) {
+        log.debug("Create book request: {}", book);
+        BookDto created = bookService.createBook(book);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<BookDto> updateBook(@PathVariable Long id, @RequestBody BookDto book) {
+        log.debug("Update book id: {} payload: {}", id, book);
+        BookDto updated = bookService.updateBook(id, book);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        log.debug("Delete book id: {}", id);
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

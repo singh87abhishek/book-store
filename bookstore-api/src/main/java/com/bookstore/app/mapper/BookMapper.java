@@ -19,4 +19,17 @@ public final class BookMapper {
             book.getImageUrl()
         );
     }
+
+    public static Book toEntity(BookDto dto, Long id ) {
+        if (dto == null) return null;
+        return new Book(
+            id,
+            dto.getTitle(),
+            dto.getAuthor(),
+            dto.getPrice(),
+            dto.getStock(),
+            dto.getDescription(),
+            dto.getImageUrl()
+        );
+    }
 }

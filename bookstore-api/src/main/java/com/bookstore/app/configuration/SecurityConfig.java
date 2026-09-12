@@ -24,10 +24,13 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // allow anonymous POST to login, keep register restricted to ADMIN
-                //.requestMatchers(org.springframework.http.HttpMethod.POST, "/bookstore-api/auth/login").permitAll()
-                .requestMatchers("/bookstore-api/auth/login").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/bookstore-api/auth/login").permitAll()
                 .requestMatchers("/bookstore-api/auth/register").hasRole("ADMIN")
-                .requestMatchers("/bookstore-api/books/**").hasAnyRole("ADMIN", "USER")
+                // Books: GET allowed for USERS and ADMINS; write operations restricted to ADMIN
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/bookstore-api/books/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/bookstore-api/books/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/bookstore-api/books/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/bookstore-api/books/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .httpBasic(basic -> {})

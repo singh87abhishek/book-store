@@ -50,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         log.debug("User registered successfully: {}", user.getUsername());
-        return new AuthResponse(user.getUsername());
+        return new AuthResponse(user.getUsername(), user.getRoles());
     }
 
     @Override
@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         log.debug("User logged in successfully: {}", user.getUsername());
-        return new AuthResponse(user.getUsername());
+        return new AuthResponse(user.getUsername(), user.getRoles());
     }
 
 }
