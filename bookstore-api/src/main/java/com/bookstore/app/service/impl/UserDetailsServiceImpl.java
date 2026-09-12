@@ -1,4 +1,4 @@
-package com.bookstore.app.service;
+package com.bookstore.app.service.impl;
 
 import java.util.stream.Collectors;
 

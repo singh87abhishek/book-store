@@ -23,7 +23,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/bookstore-api/auth/**").hasRole("ADMIN")
+                // allow anonymous POST to login, keep register restricted to ADMIN
+                //.requestMatchers(org.springframework.http.HttpMethod.POST, "/bookstore-api/auth/login").permitAll()
+                .requestMatchers("/bookstore-api/auth/login").permitAll()
+                .requestMatchers("/bookstore-api/auth/register").hasRole("ADMIN")
                 .requestMatchers("/bookstore-api/books/**").hasAnyRole("ADMIN", "USER")
                 .anyRequest().authenticated()
             )
