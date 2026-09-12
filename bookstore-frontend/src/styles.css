@@ -1,0 +1,18 @@
+body { margin: 0; padding: 0 }
+input { margin-right: 8px }
+button { margin-right: 8px }
+
+.modal-backdrop {
+	position: fixed;
+	left: 0; top: 0; right: 0; bottom: 0;
+	background: rgba(0,0,0,0.4);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.modal {
+	background: white;
+	padding: 16px;
+	border-radius: 6px;
+	box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
