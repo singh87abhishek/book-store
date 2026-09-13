@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { apiFetch } from './api'
+import { apiFetch, createBook, updateBook as apiUpdateBook, deleteBook as apiDeleteBook } from './api'
+import BookForm from './BookForm'
 
 export default function App() {
   const [creds, setCreds] = useState({ username: '', password: '' })
@@ -9,6 +10,8 @@ export default function App() {
   const [books, setBooks] = useState([])
   const [cart, setCart] = useState(null)
   const [orders, setOrders] = useState([])
+  const [bookFormOpen, setBookFormOpen] = useState(false)
+  const [bookToEdit, setBookToEdit] = useState(null)
 
   const [qtyModal, setQtyModal] = useState({ open: false, book: null, qty: 1 })
 
@@ -24,7 +27,7 @@ export default function App() {
     const res = await apiFetch('/auth/login', 'POST', payload, creds.username, creds.password)
     setOutput(JSON.stringify(res, null, 2))
     if (res && res.username) {
-      setLoggedIn({ username: creds.username, password: creds.password })
+      setLoggedIn({ username: creds.username, password: creds.password, roles: res.roles || [] })
       setView('books')
       fetchBooks({ username: creds.username, password: creds.password })
     }
@@ -54,6 +57,50 @@ export default function App() {
 
   async function openAddToCartModal(book) {
     setQtyModal({ open: true, book, qty: 1 })
+  }
+
+  function isAdminUser() {
+    return loggedIn && (loggedIn.roles && (loggedIn.roles.includes('ROLE_ADMIN') || loggedIn.roles.includes('ADMIN')) || loggedIn.username === 'admin')
+  }
+
+  function openAddBookForm() {
+    setBookToEdit(null)
+    setBookFormOpen(true)
+  }
+
+  function openEditBookForm(book) {
+    setBookToEdit(book)
+    setBookFormOpen(true)
+  }
+
+  async function submitBook(book) {
+    if (!loggedIn) return setOutput('Not authenticated')
+    try {
+      let res
+      if (bookToEdit && bookToEdit.id) {
+        res = await apiUpdateBook(bookToEdit.id, book, loggedIn.username, loggedIn.password)
+      } else {
+        res = await createBook(book, loggedIn.username, loggedIn.password)
+      }
+      setOutput(JSON.stringify(res, null, 2))
+      setBookFormOpen(false)
+      setBookToEdit(null)
+      fetchBooks()
+    } catch (e) {
+      setOutput(String(e))
+    }
+  }
+
+  async function handleDeleteBook(id) {
+    if (!loggedIn) return setOutput('Not authenticated')
+    if (!window.confirm('Delete this book?')) return
+    try {
+      const res = await apiDeleteBook(id, loggedIn.username, loggedIn.password)
+      setOutput(JSON.stringify(res, null, 2))
+      fetchBooks()
+    } catch (e) {
+      setOutput(String(e))
+    }
   }
 
   async function confirmAddToCart() {
@@ -117,8 +164,11 @@ export default function App() {
       <div style={{ marginBottom: 12 }}>
         <span>Logged in as: <strong>{loggedIn.username}</strong></span>
         <button style={{ marginLeft: 8 }} onClick={logout}>Logout</button>
-        {loggedIn.username === 'admin' && (
+        {isAdminUser() && (
           <button style={{ marginLeft: 8 }} onClick={() => setView('register')}>Register User</button>
+        )}
+        {isAdminUser() && (
+          <button style={{ marginLeft: 8 }} onClick={() => { setView('books'); openAddBookForm() }}>Add Book</button>
         )}
       </div>
 
@@ -147,6 +197,12 @@ export default function App() {
                 {books && books.map(b => (
                   <li key={b.id}>{b.title} - {b.author} - {b.price}
                     <button style={{ marginLeft: 8 }} onClick={() => openAddToCartModal(b)}>Add to cart</button>
+                    {isAdminUser() && (
+                      <>
+                        <button style={{ marginLeft: 8 }} onClick={() => openEditBookForm(b)}>Edit</button>
+                        <button style={{ marginLeft: 8 }} onClick={() => handleDeleteBook(b.id)}>Delete</button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -203,6 +259,10 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {bookFormOpen && (
+        <BookForm initial={bookToEdit || {}} onSubmit={submitBook} onCancel={() => { setBookFormOpen(false); setBookToEdit(null) }} />
       )}
 
     </div>

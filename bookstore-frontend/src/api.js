@@ -12,4 +12,16 @@ export async function apiFetch(path, method = 'GET', body = null, username = 'ad
   try { return JSON.parse(text) } catch (e) { return text }
 }
 
+export async function createBook(book, username = 'admin', password = 'admin123') {
+  return apiFetch('/books', 'POST', book, username, password)
+}
+
+export async function updateBook(id, book, username = 'admin', password = 'admin123') {
+  return apiFetch(`/books/${id}`, 'PUT', book, username, password)
+}
+
+export async function deleteBook(id, username = 'admin', password = 'admin123') {
+  return apiFetch(`/books/${id}`, 'DELETE', null, username, password)
+}
+
 export default apiFetch
