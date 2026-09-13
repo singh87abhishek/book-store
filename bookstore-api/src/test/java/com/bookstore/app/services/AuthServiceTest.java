@@ -4,10 +4,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,6 +23,7 @@ import com.bookstore.app.entity.User;
 import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.repository.UserRepository;
 import com.bookstore.app.service.impl.AuthServiceImpl;
+import com.bookstore.app.service.impl.UserDetailsServiceImpl;
 
 
 
@@ -31,6 +35,9 @@ public class AuthServiceTest {
 
     @InjectMocks 
     private AuthServiceImpl authService;
+
+    @InjectMocks
+    private UserDetailsServiceImpl userDetailsService;
 
     @Test 
     public void testRegisterUser_Success() {
@@ -108,5 +115,20 @@ public class AuthServiceTest {
                         .hasMessageContaining("Invalid username or password");
     }
 
+    @Test
+    void loadUserByUsername() {
+        User user = new User();
+        user.setUsername("admin");
+        user.setPassword("encoded");
+        user.setRoles(Set.of("ADMIN"));
+
+        when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername("admin");
+
+        assertThat(userDetails.getAuthorities())
+            .extracting(GrantedAuthority::getAuthority)
+            .containsExactly("ROLE_ADMIN");
+    }
 
 }

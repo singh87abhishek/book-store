@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.bookstore.app.constants.UserRole;
 import com.bookstore.app.entity.Book;
 import com.bookstore.app.entity.User;
 import com.bookstore.app.repository.BookRepository;
@@ -30,14 +31,14 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setUsername("admin");
             adminUser.setPassword(passwordEncoder.encode("admin123"));
             adminUser.setEmail("admin@bookstore.com");
-            adminUser.setRoles(Set.of("ROLE_ADMIN"));
+            adminUser.setRoles(Set.of(UserRole.ADMIN.name()));
 
 
             User user = new User();
             user.setUsername("Abhi");
             user.setPassword(passwordEncoder.encode("abhi123"));
             user.setEmail("abhishek@bookstore.com");
-            user.setRoles(Set.of("ROLE_USER"));
+            user.setRoles(Set.of(UserRole.USER.name()));
 
             List<User> users = List.of(adminUser, user);
 

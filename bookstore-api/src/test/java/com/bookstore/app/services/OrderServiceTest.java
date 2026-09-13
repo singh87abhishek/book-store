@@ -122,7 +122,7 @@ public class OrderServiceTest {
 
         when(orderRepository.findByUserOrderByCreatedAtDesc(user)).thenReturn(List.of(order));
 
-        var orders = orderService.getUserOrders("testuser");
+        List<OrderDto> orders = orderService.getUserOrders("testuser");
         assertThat(orders).hasSize(1);
         assertThat(orders.get(0).getId()).isEqualTo(5L);
         assertThat(orders.get(0).getItems()).hasSize(1);

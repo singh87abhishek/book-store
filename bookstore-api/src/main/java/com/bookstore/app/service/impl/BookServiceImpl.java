@@ -10,8 +10,6 @@ import com.bookstore.app.entity.Book;
 import com.bookstore.app.exception.ResourceNotFoundException;
 import com.bookstore.app.mapper.BookMapper;
 import com.bookstore.app.exception.BadRequestException;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import com.bookstore.app.repository.BookRepository;
 import com.bookstore.app.service.BookService;
 

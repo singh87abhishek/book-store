@@ -5,6 +5,7 @@ import java.util.Set;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.bookstore.app.constants.UserRole;
 import com.bookstore.app.dto.AuthRequest;
 import com.bookstore.app.dto.AuthResponse;
 import com.bookstore.app.dto.RegistrationRequest;
@@ -46,10 +47,10 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Set.of("ROLE_USER")); // default role
+        user.setRoles(Set.of(UserRole.USER.name())); // default role
         userRepository.save(user);
 
-        log.debug("User registered successfully: {}", user.getUsername());
+        log.debug("User registered successfully: {} with role: {}", user.getUsername(), user.getRoles());
         return new AuthResponse(user.getUsername(), user.getRoles());
     }
 
@@ -67,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Invalid username or password");
         }
 
-        log.debug("User logged in successfully: {}", user.getUsername());
+        log.debug("User logged in successfully: {} with role: {}", user.getUsername(), user.getRoles());
         return new AuthResponse(user.getUsername(), user.getRoles());
     }
 
