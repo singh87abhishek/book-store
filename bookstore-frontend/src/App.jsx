@@ -16,20 +16,26 @@ export default function App() {
   const [qtyModal, setQtyModal] = useState({ open: false, book: null, qty: 1 })
 
   async function handleRegister() {
-    if (!loggedIn || loggedIn.username !== 'admin') return alert('Register allowed for admin only')
+    if (!loggedIn || !isAdminUser()) return alert('Register allowed for admin only')
     const payload = { username: creds.username, password: creds.password, email: creds.username + '@example.com' }
     const res = await apiFetch('/auth/register', 'POST', payload, loggedIn.username, loggedIn.password)
     setOutput(JSON.stringify(res, null, 2))
   }
 
   async function handleLogin() {
-    const payload = { userName: creds.username, password: creds.password }
-    const res = await apiFetch('/auth/login', 'POST', payload, creds.username, creds.password)
-    setOutput(JSON.stringify(res, null, 2))
-    if (res && res.username) {
-      setLoggedIn({ username: creds.username, password: creds.password, roles: res.roles || [] })
-      setView('books')
-      fetchBooks({ username: creds.username, password: creds.password })
+    try {
+      const payload = { userName: creds.username, password: creds.password }
+      const res = await apiFetch('/auth/login', 'POST', payload, creds.username, creds.password)
+      setOutput(JSON.stringify(res, null, 2))
+      if (res && res.username) {
+        setLoggedIn({ username: creds.username, password: creds.password, roles: res.roles || [] })
+        setView('books')
+        fetchBooks({ username: creds.username, password: creds.password })
+      }
+    } catch (e) {
+      setLoggedIn(null)
+      setBooks([])
+      setOutput(String(e.message || e))
     }
   }
 
@@ -43,9 +49,15 @@ export default function App() {
 
   async function fetchBooks(auth = loggedIn) {
     if (!auth) return setOutput('Not authenticated')
-    const res = await apiFetch('/books', 'GET', null, auth.username, auth.password)
-    setBooks(res)
-    setOutput(JSON.stringify(res, null, 2))
+    try {
+      const res = await apiFetch('/books', 'GET', null, auth.username, auth.password)
+      const nextBooks = Array.isArray(res) ? res : []
+      setBooks(nextBooks)
+      setOutput(JSON.stringify(res, null, 2))
+    } catch (e) {
+      setBooks([])
+      setOutput(String(e.message || e))
+    }
   }
 
   async function fetchCart() {
@@ -60,7 +72,9 @@ export default function App() {
   }
 
   function isAdminUser() {
-    return loggedIn && (loggedIn.roles && (loggedIn.roles.includes('ROLE_ADMIN') || loggedIn.roles.includes('ADMIN')) || loggedIn.username === 'admin')
+    if (!loggedIn || !loggedIn.roles) return false
+    const roleSet = new Set(loggedIn.roles.map(role => String(role).startsWith('ROLE_') ? role : `ROLE_${role}`))
+    return roleSet.has('ROLE_ADMIN') || loggedIn.roles.includes('ADMIN')
   }
 
   function openAddBookForm() {
@@ -181,7 +195,7 @@ export default function App() {
 
       <div style={{ display: 'flex', gap: 16 }}>
         <div style={{ flex: 1 }}>
-          {view === 'register' && loggedIn.username === 'admin' && (
+          {view === 'register' && isAdminUser() && (
             <div>
               <h3>Register New User</h3>
               <input placeholder="new username" value={creds.username} onChange={e => setCreds({ ...creds, username: e.target.value })} />
