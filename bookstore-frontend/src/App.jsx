@@ -4,6 +4,8 @@ import BookForm from './BookForm'
 
 export default function App() {
   const [creds, setCreds] = useState({ username: '', password: '' })
+  const [signup, setSignup] = useState({ username: '', email: '', password: '' })
+  const [showSignup, setShowSignup] = useState(false)
   const [loggedIn, setLoggedIn] = useState(null) // { username, password }
   const [view, setView] = useState('books')
   const [output, setOutput] = useState('')
@@ -16,10 +18,23 @@ export default function App() {
   const [qtyModal, setQtyModal] = useState({ open: false, book: null, qty: 1 })
 
   async function handleRegister() {
-    if (!loggedIn || !isAdminUser()) return alert('Register allowed for admin only')
-    const payload = { username: creds.username, password: creds.password, email: creds.username + '@example.com' }
-    const res = await apiFetch('/auth/register', 'POST', payload, loggedIn.username, loggedIn.password)
-    setOutput(JSON.stringify(res, null, 2))
+    const payload = {
+      username: signup.username,
+      email: signup.email,
+      password: signup.password,
+    }
+
+    try {
+      const res = await apiFetch('/auth/register', 'POST', payload, '', '')
+      setOutput(JSON.stringify(res, null, 2))
+      setShowSignup(false)
+      setSignup({ username: '', email: '', password: '' })
+      if (res && res.username) {
+        setCreds({ username: res.username, password: signup.password })
+      }
+    } catch (e) {
+      setOutput(String(e.message || e))
+    }
   }
 
   async function handleLogin() {
@@ -158,11 +173,31 @@ export default function App() {
     return (
       <div style={{ padding: 16, fontFamily: 'Arial, sans-serif' }}>
         <h2>Bookstore - Login</h2>
-        <div style={{ marginBottom: 12 }}>
-          <input placeholder="username" value={creds.username} onChange={e => setCreds({ ...creds, username: e.target.value })} />
-          <input placeholder="password" type="password" value={creds.password} onChange={e => setCreds({ ...creds, password: e.target.value })} />
-          <button onClick={handleLogin}>Login</button>
-        </div>
+
+        {!showSignup ? (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 12 }}>
+              <input placeholder="username" value={creds.username} onChange={e => setCreds({ ...creds, username: e.target.value })} />
+              <input placeholder="password" type="password" value={creds.password} onChange={e => setCreds({ ...creds, password: e.target.value })} />
+              <button onClick={handleLogin}>Login</button>
+            </div>
+            <button onClick={() => setShowSignup(true)}>Sign Up</button>
+          </div>
+        ) : (
+          <div style={{ marginBottom: 12 }}>
+            <h3>Create Account</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 320 }}>
+              <input placeholder="username" value={signup.username} onChange={e => setSignup({ ...signup, username: e.target.value })} />
+              <input placeholder="email" type="email" value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })} />
+              <input placeholder="password" type="password" value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={handleRegister}>Create Account</button>
+                <button onClick={() => setShowSignup(false)}>Back to Login</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div>
           <h3>Last Response</h3>
           <pre style={{ background: '#f6f6f6', padding: 8, height: 200, overflow: 'auto' }}>{output}</pre>
