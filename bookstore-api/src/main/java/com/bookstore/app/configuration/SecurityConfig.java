@@ -26,9 +26,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // allow anonymous POST to login, keep register restricted to ADMIN
-                .requestMatchers(HttpMethod.POST, "/bookstore-api/auth/login").permitAll()
-                .requestMatchers("/bookstore-api/auth/register").hasRole(UserRole.ADMIN.name())
+                // allow anonymous requset to login and anyone can register as normal user
+                .requestMatchers("/bookstore-api/auth/**").permitAll()
 
                 // Books: GET allowed for USERS and ADMINS; write operations restricted to ADMIN
                 .requestMatchers(HttpMethod.GET, "/bookstore-api/books/**").hasAnyRole(UserRole.ADMIN.name(), UserRole.USER.name())

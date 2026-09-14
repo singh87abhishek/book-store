@@ -4,6 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -94,5 +98,34 @@ public class CartServiceTest {
         CartDto user2Cart = cartService.getCart("user2");
 
         assertThat(user2Cart.getItems()).isEmpty();
+    }
+
+    @Test
+    void testConcurrentAddBookToCart() throws InterruptedException {
+        when(bookService.findEntityById(1L)).thenReturn(book);
+
+        int threadCount = 5;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    cartService.addBookToCart("concurrentUser", 1L, 1);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await(); // wait for all threads to finish
+        executor.shutdown();
+
+        CartDto cartDto = cartService.getCart("concurrentUser");
+
+        // Expect 10 items total (quantity = 5)
+        assertThat(cartDto.getItems()).hasSize(1);
+        assertThat(cartDto.getItems().get(0).getQuantity()).isEqualTo(5);
+        assertThat(cartDto.getTotalPrice()).isEqualTo(5 * book.getPrice());
     }
 }

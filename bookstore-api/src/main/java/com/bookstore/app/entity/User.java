@@ -6,10 +6,8 @@ import java.util.Set;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-/**
- * User ENTITY
- */
 @Entity
 @Table (name = "users") 
 @Data 
@@ -25,6 +23,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @ToString.Exclude // exclude password from toString method.
     @Column(nullable = false)
     private String password;
 

@@ -3,6 +3,7 @@ package com.bookstore.app.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
@@ -24,6 +25,7 @@ import com.bookstore.app.entity.OrderItem;
 import com.bookstore.app.entity.User;
 import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.exception.ResourceNotFoundException;
+import com.bookstore.app.factory.OrderFactory;
 import com.bookstore.app.repository.OrderRepository;
 import com.bookstore.app.repository.UserRepository;
 import com.bookstore.app.service.BookService;
@@ -45,11 +47,15 @@ public class OrderServiceTest {
     @Mock
     private BookService bookService;
 
+    @Mock
+    private OrderFactory orderFactory;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
     private User user;
     private Book book;
+    private Order order;
 
     @BeforeEach
     void setUp() {
@@ -59,13 +65,44 @@ public class OrderServiceTest {
         user.setEmail("testuser@bookstore.com");
 
         book = new Book(1L, "Test Book", "Test Author", 10.0, 5, "desc", "img.png");
+
+        order = new Order();
+
+        OrderItem item = new OrderItem();
+        item.setBook(book);
+        item.setOrder(order);
+        item.setQuantity(2);
+        item.setUnitPrice(10.0);
+        
+        order.setUser(user);
+        order.setItems(List.of(item));
+        order.setTotalAmount(20.0);
+
     }
 
     @Test
     void testCheckOut_success_singleItem() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(cartService.getCartItems("testuser")).thenReturn(Map.of(1L, 2));
-        when(bookService.findEntityById(1L)).thenReturn(book);
+        doNothing().when(bookService).save(any(Book.class));
+
+        when(orderFactory.createOrder(user, Map.of(1L, 2))).thenAnswer(invocation -> {
+            book.setStock(3);
+            bookService.save(book);
+
+            Order created = new Order();
+            created.setId(100L);
+            created.setUser(user);
+            created.setTotalAmount(20.0);
+
+            OrderItem item = new OrderItem();
+            item.setBook(book);
+            item.setOrder(created);
+            item.setQuantity(2);
+            item.setUnitPrice(10.0);
+            created.setItems(List.of(item));
+            return created;
+        });
 
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> {
             Order o = inv.getArgument(0);
@@ -87,6 +124,7 @@ public class OrderServiceTest {
     void testCheckOut_throwsBadRequest_whenCartEmpty() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(cartService.getCartItems("testuser")).thenReturn(Map.of());
+        when(orderFactory.createOrder(user, Map.of())).thenThrow(new BadRequestException("Cart is Empty"));
 
         assertThatThrownBy(() -> orderService.checkOut("testuser"))
                 .isInstanceOf(BadRequestException.class)
@@ -97,8 +135,7 @@ public class OrderServiceTest {
     void testCheckOut_throwsBadRequest_whenInsufficientStock() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(cartService.getCartItems("testuser")).thenReturn(Map.of(1L, 10));
-        Book lowStock = new Book(1L, "Test Book", "Test Author", 10.0, 2, "desc", "img.png");
-        when(bookService.findEntityById(1L)).thenReturn(lowStock);
+        when(orderFactory.createOrder(user, Map.of(1L, 10))).thenThrow(new BadRequestException("Insufficient stock for: Test Book"));
 
         assertThatThrownBy(() -> orderService.checkOut("testuser"))
                 .isInstanceOf(BadRequestException.class)

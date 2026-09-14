@@ -2,30 +2,30 @@
 
 **Prerequisites**
 - Java 17 (or later) installed and `JAVA_HOME` configured
-- Maven (optional if you use the included wrapper) or use the provided `mvnw`/`mvnw.cmd`
+- Maven
 
 **Build & Run (development)**
 - From the `bookstore-api` directory, start the app with the Maven wrapper:
 
 ```bash
 # macOS / Linux
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # Windows (PowerShell)
-./mvnw.cmd spring-boot:run
+mvn spring-boot:run
 ```
 
 **Package and run the JAR**
 
 ```bash
-./mvnw package
+mvn package
 java -jar target/*.jar
 ```
 
 **Run tests**
 
 ```bash
-./mvnw test
+mvn test
 ```
 
 **Important project files**
@@ -37,8 +37,16 @@ java -jar target/*.jar
 - `/bookstore-api/auth/**` — Authentication and registration endpoints
 - `/bookstore-api/books/**` — Book listing and management endpoints
 - `/bookstore-api/cart/**` — Cart operations (add/update/remove/get)
+- `/bookstore-api/order/**` — Get and checkout
 
 Note: endpoints may be protected by roles according to `SecurityConfig`. Adjust users/roles or security settings in the source if you need open endpoints for development.
+
+**Data already feeded**
+On the first startup (empty DB), application will automatically seed default users and books.
+This ensures your app always has baseline data (admin account + sample books) available for testing or demo purposes. (See DataSeeder.java)
+ADMIN user - admin/admin123
+USER user - Abhi/abhi123
+
 
 **Registering a user (example)**
 A minimal example using `curl` (adjust hostname/port if different):
@@ -49,5 +57,4 @@ curl -X POST -H "Content-Type: application/json" \
   http://localhost:8080/api/auth/register
 ```
 
-**Troubleshooting**
-- Check logs for stack traces and ensure database configuration in `application.properties` is correct (JDBC URL, username, password).
+

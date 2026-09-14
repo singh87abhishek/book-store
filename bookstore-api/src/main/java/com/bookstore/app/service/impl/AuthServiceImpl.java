@@ -2,6 +2,7 @@ package com.bookstore.app.service.impl;
 
 import java.util.Set;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,15 +44,20 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email already exists");
         }
 
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Set.of(UserRole.USER.name())); // default role
-        userRepository.save(user);
+        try {
+            User user = new User();
+            user.setUsername(request.getUsername());
+            user.setEmail(request.getEmail());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setRoles(Set.of(UserRole.USER.name())); // default role
+            userRepository.save(user);
 
-        log.debug("User registered successfully: {} with role: {}", user.getUsername(), user.getRoles());
-        return new AuthResponse(user.getUsername(), user.getRoles());
+            log.debug("User registered successfully: {} with role: {}", user.getUsername(), user.getRoles());
+            return new AuthResponse(user.getUsername(), user.getRoles());
+        } catch (DataIntegrityViolationException e) {
+            log.error("Registration failed: duplicate username/email", e);
+            throw new BadRequestException("Username or Email already exists");
+        }
     }
 
     @Override

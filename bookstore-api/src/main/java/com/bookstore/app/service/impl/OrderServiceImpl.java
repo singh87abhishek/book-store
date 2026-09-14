@@ -8,17 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bookstore.app.dto.OrderDto;
-import com.bookstore.app.entity.Book;
 import com.bookstore.app.entity.Order;
-import com.bookstore.app.entity.OrderItem;
 import com.bookstore.app.entity.User;
 import com.bookstore.app.repository.OrderRepository;
 import com.bookstore.app.repository.UserRepository;
-import com.bookstore.app.exception.BadRequestException;
 import com.bookstore.app.exception.ResourceNotFoundException;
+import com.bookstore.app.factory.OrderFactory;
 import com.bookstore.app.mapper.OrderMapper;
 import com.bookstore.app.service.CartService;
-import com.bookstore.app.service.BookService;
 import com.bookstore.app.service.OrderService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +28,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final CartService cartService;
-    private final BookService bookService;
+    private final OrderFactory orderFactory;
 
     @Override
     public List<OrderDto> getUserOrders(String userName) {
@@ -53,51 +50,15 @@ public class OrderServiceImpl implements OrderService {
         User user = getUser(userName);
 
         Map<Long, Integer> cartItems = cartService.getCartItems(userName);
-        if(cartItems.isEmpty()) {
-            log.error("Checkout failed - Cart is empty for User: {}", userName);
-            throw new BadRequestException("Cart is Empty");
-        }
+        
+        Order order = orderFactory.createOrder(user, cartItems);
 
-        Order order = new Order();
-        order.setUser(user);
-        order.setStatus("CONFIRMED");
-
-        double total = 0;
-
-        for(Map.Entry<Long, Integer> entry : cartItems.entrySet()) {
-            Book book = bookService.findEntityById(entry.getKey());
-            int qty = entry.getValue();
-
-            //Check if the stock is sufficient
-            if(book.getStock() < qty) {
-                log.error("Checkout failed - insuficient stock for book: {} requested: {} available: {}", book.getTitle(), qty, book.getStock());
-                throw new BadRequestException("Insufficient stock for: "+ book.getTitle());
-            }
-
-            log.debug("Adding to order - book: {} quantity: {} unitPrice: {}", book.getTitle(), qty, book.getPrice());
-            OrderItem item = new OrderItem();
-            item.setOrder(order);
-            item.setBook(book);
-            item.setQuantity(qty);
-            item.setUnitPrice(book.getPrice());
-            
-            order.getItems().add(item);
-
-            //Update the book quantity (decrease)
-            book.setStock(book.getStock() - qty);
-            bookService.save(book);
-
-            //Calculate the total amount
-            total += book.getPrice() * qty;
-        }
-
-        order.setTotalAmount(total);
         Order saved = orderRepository.save(order);
         
         //Clear the cart of the user
         cartService.clearCart(userName);
 
-        log.debug("Order placed successfuly for user: {} orderId: {} total:{}", userName, saved.getId(), total);
+        log.debug("Order placed successfuly for user: {} orderId: {} total:{}", userName, saved.getId(), saved.getTotalAmount());
         return toDto(saved);
     }
 
